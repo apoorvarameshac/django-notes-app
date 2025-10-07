@@ -35,8 +35,9 @@ pipeline {
         }
         stage('Deploy container') {
             steps {
+                withCredentials([file(credentialsId: 'kubernetes', variable: 'KUBECONFIG_FILE')]) {
                 sh '''
-                export KUBECONFIG=/var/lib/jenkins/.kube/config
+                 export KUBECONFIG=${KUBECONFIG_FILE}
                 kubectl apply -f manifest/deployment.yaml
                 kubectl apply -f manifest/service.yaml
 
