@@ -37,7 +37,10 @@ pipeline {
         stage('Run Container') {
             steps {
                 echo "Running container"
+                docker stop ${CONTAINER_NAME} || true
+                docker rm ${CONTAINER_NAME} || true
                 sh 'docker run -d -p 8000:8000 --name ${CONTAINER_NAME} ${FULL_IMAGE} '
+                
             }
         }
       }
