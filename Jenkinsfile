@@ -49,6 +49,7 @@ pipeline {
         stage('Deploy container') {
             steps {
                 sh '''
+                kubectl delete --all pods
                 kubectl apply -f manifest/deployment.yaml
                 kubectl apply -f manifest/service.yaml
 
