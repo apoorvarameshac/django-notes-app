@@ -1,54 +1,51 @@
 pipeline {
     agent any
-
+    
     environment {
-        IMAGE_NAME = "vamshi589/django-app"
+        IMAGE_NAME = "apoorvar12/django-notes-app"
         IMAGE_TAG = "${BUILD_NUMBER}"
         FULL_IMAGE = "${IMAGE_NAME}:${IMAGE_TAG}"
+        CONTAINER_NAME = "django_notes_app_test"
     }
-
+    
     stages {
-        stage('Clone Repo') {
+        stage('Checkout') {
             steps {
-                git branch: 'main', credentialsId: 'github', url: 'https://github.com/vamshireddy903/django-notes-app.git'
+                echo "Checking out source code..."
+                git branch: 'main', url: 'https://github.com/apoorvarameshac/django-notes-app.git'
             }
         }
-
+        
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $FULL_IMAGE .'
+                echo "Building Docker image"
+                sh 'docker build -t ${FULL_IMAGE} .'
             }
         }
-
-        stage('Push Docker Image') {
+        
+        stage('Push to DockerHub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'dockerhubuser', passwordVariable: 'dockerhubpass')]) {
-                    sh 'docker login -u $dockerhubuser -p $dockerhubpass'
-                    sh 'docker push $FULL_IMAGE'
+                echo "Pushing image to DockerHub..."
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                    sh '''
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        docker push $FULL_IMAGE
+                        docker logout
+                    '''
                 }
             }
         }
-
-       stage('Update Deployment YAML and Push') {
-    steps {
-        withCredentials([usernamePassword(credentialsId: 'github', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
-            script {
-                sh """
-                echo "Updating deployment.yaml with new image: ${FULL_IMAGE}"
-                sed -i "s|image:.*|image: ${FULL_IMAGE}|" notesapp/deployment.yaml
-
-                git config --global user.email "devops@automation.com"
-                git config --global user.name "Jenkins Automation"
-
-                git add notesapp/deployment.yaml
-                git diff-index --quiet HEAD || git commit -m "Update image to ${FULL_IMAGE}"
-
-                git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/vamshireddy903/django-notes-app.git
-                git push origin main
-                """
-                    }
-                }
+        
+        stage('Run Container') {
+            steps {
+                echo "Running container"
+                sh '''
+                    docker stop ${CONTAINER_NAME} || true
+                    docker rm ${CONTAINER_NAME} || true
+                    docker run -d -p 8000:8000 --name ${CONTAINER_NAME} ${FULL_IMAGE}
+                '''
             }
         }
     }
 }
+
