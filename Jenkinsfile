@@ -37,7 +37,7 @@ pipeline {
         stage('Run Container') {
             steps {
                 echo "Running container"
-                sh 'docker run -d -p 8000:8000 --name ${CONTAINER_NAME} ${BUILD_NUMBER} '
+                sh 'docker run -d -p 8000:8000 --name ${CONTAINER_NAME} ${FULL_IMAGE} '
             }
         }
       }
