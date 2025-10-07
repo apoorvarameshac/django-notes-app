@@ -36,8 +36,8 @@ pipeline {
         stage('Deploy container') {
             steps {
                 sh '''
-                kubectl apply -f deployment.yaml
-                kubectl apply -f service.yaml
+                kubectl apply -f manifest/deployment.yaml
+                kubectl apply -f manifest/service.yaml
 
                 '''
             }
