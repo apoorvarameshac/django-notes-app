@@ -44,6 +44,7 @@ pipeline {
                 '''
             }
         }
+        }
         stage("Cleanup kind Cluster"){
             steps {
                 echo "Cleaning up kind cluster"
